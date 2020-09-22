@@ -1,0 +1,120 @@
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.TransferHandler;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+
+public class PdftoText {
+
+	private JFrame frame;
+	private JTextArea textArea;
+
+
+	public static final void main(String[] args)throws IOException {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					PdftoText window = new PdftoText();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	public PdftoText() {
+		initialize();
+	}
+
+
+	private void initialize() {
+		frame = new JFrame();
+		frame.setBounds(100, 100, 450, 300);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		JScrollPane scrollPane = new JScrollPane();
+		frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+
+		textArea = new JTextArea();
+		scrollPane.setViewportView(textArea);
+
+
+		textArea.setTransferHandler(new DropFileHandler());
+		textArea.setText("ウィンドウ内にpdfファイルをドラッグするとtxtファイルになって出力されます");
+	}
+
+
+	private class DropFileHandler extends TransferHandler {
+
+
+		@Override
+		public boolean canImport(TransferSupport support) {
+			if (!support.isDrop()) {
+		        return false;
+		    }
+
+			if (!support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+		        return false;
+		    }
+
+			return true;
+		}
+
+		
+		@Override
+		public boolean importData(TransferSupport support) {
+			if (!canImport(support)) {
+		        return false;
+		    }
+
+
+			Transferable t = support.getTransferable();
+			try {
+				List files = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
+                int fileNo = files.size();
+
+            	for (int i = 0; i < fileNo; i++){
+					File file = (File)files.get(i);
+					String fileAPath = file.getAbsolutePath();
+				/*	textArea.setText(fileAPath); */
+					String fileName = file.getName();
+				/*	textArea.setText(fileName); */
+					File fileInst = new File(fileAPath);
+					PDDocument document = PDDocument.load(fileInst);
+					int filePage = document.getNumberOfPages();
+				/*	if(filePage != 1) {
+						textArea.setText(fileName+"は1ページのファイルではありません。pdfの分割が失敗しています。");
+						return false;
+					} */
+					PDFTextStripper stripper = new PDFTextStripper();
+					stripper.setStartPage(1);
+					stripper.setEndPage(1);
+					String text = stripper.getText(document);
+					String textName = fileName.replace("pdf", "txt");
+					textArea.setText(text);
+					FileWriter fw = new FileWriter(textName,false);
+					fw.write(text);
+					fw.flush();
+					fw.close();
+				}
+
+			} catch (UnsupportedFlavorException | IOException e) {
+				e.printStackTrace();
+			}
+			return true;
+		}
+	}
+}
