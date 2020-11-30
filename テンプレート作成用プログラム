@@ -1,0 +1,31 @@
+for(int i = 0; i < 1000; i++){
+    System.out.println("ファイル名（中分類）を入力してください。"); //ファイル名（中分類）を入力する
+    String fileName = new java.util.Scanner(System.in).nextLine();
+    XSSFWorkbook wb = new XSSFWorkbook();//ブックを作成する
+    String fileId[] = fileName.split(".");
+    System.out.println("小分類の総数を数値で入力してください。");//シート名（小分類）を入力する
+    int sheetNo = new java.util.Scanner(System.in).nextInt();
+        for(int j = 0; j < sheetNo; j++){
+            System.out.println("小分類" + sheetNo + "の枝番の総数を数値で入力してください。")//シート数（枝番）を入力する
+            int branchNo = new java.util.Scanner(System.in).nextInt();
+                for(int k = 0; k < branchNo; k++){
+                    String sheetName = fileId[0] + "." + sheetNo + "." + branchNo;
+                    XSSFSheet sheet = wb.createSheet();//シートを作成する
+                    wb.setSheetName(k, sheetName);
+                }
+        }
+    FileOutputStream fout = null;
+    try{
+        fout = new FileOutputStream("C\Users\user\Desktop\" + fileName + ".xls");
+        wb.write(fout);
+    }catch(IOException e){
+        System.out.println(e.toString());
+    }finally{
+        try{
+            fout.close();
+        }catch(IOException e){
+            System.out.println(e.toString());
+        }
+    }
+
+}
